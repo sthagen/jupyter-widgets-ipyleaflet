@@ -44,6 +44,7 @@ ipyleaflet: Interactive maps in the Jupyter notebook
     api_reference/geo_json
     api_reference/geodata
     api_reference/choropleth
+    api_reference/vector_tile.rst
 
 .. toctree::
     :caption: Controls
@@ -58,3 +59,10 @@ ipyleaflet: Interactive maps in the Jupyter notebook
     api_reference/draw_control
     api_reference/widget_control
     api_reference/legend_control
+    api_reference/search_control
+
+.. toctree::
+    :caption: ipyleaflet related projects
+    :maxdepth: 2
+
+    related_projects
