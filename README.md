@@ -116,7 +116,7 @@ https://ipyleaflet.readthedocs.io/
 We use a shared copyright model that enables all contributors to maintain the
 copyright on their contributions.
 
-This software is licensed under the BSD-3-Clause license. See the [LICENSE](LICENSE) file for details.
+This software is licensed under the MIT license. See the [LICENSE](LICENSE) file for details.
 
 ## Related projects
 
@@ -124,7 +124,7 @@ The `ipyleaflet` repository includes the `jupyter-leaflet` npm package, which
 is a front-end component, and the `ipyleaflet` python package which is the
 backend for the Python Jupyter kernel.
 
-Similarly, the [`xleaflet`](https://github.com/QuantStack/xleaflet/) project
+Similarly, the [`xleaflet`](https://github.com/jupyter-xeus/xleaflet/) project
 provides a backend to `jupyter-leaflet` for the "xeus-cling" C++ Jupyter
 kernel.
 

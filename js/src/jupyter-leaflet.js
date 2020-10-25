@@ -12,6 +12,7 @@ export * from './layers/TileLayer.js';
 export * from './layers/VectorTileLayer.js';
 export * from './layers/LocalTileLayer.js';
 export * from './layers/WMSLayer.js';
+export * from './layers/MagnifyingGlass.js';
 export * from './layers/ImageOverlay.js';
 export * from './layers/VideoOverlay.js';
 export * from './layers/Velocity.js';
@@ -28,6 +29,7 @@ export * from './layers/MarkerCluster.js';
 export * from './layers/LayerGroup.js';
 export * from './layers/FeatureGroup.js';
 export * from './layers/GeoJSON.js';
+export * from './layers/DivIcon.js';
 
 //Controls
 export * from './controls/AttributionControl.js';

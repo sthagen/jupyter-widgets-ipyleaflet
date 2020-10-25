@@ -3,7 +3,7 @@
 #
 
 import copy
-
+import asyncio
 import json
 
 from ipywidgets import (
@@ -67,6 +67,17 @@ def basemap_to_tiles(basemap, day='yesterday', **kwargs):
         name=basemap.get('name', ''),
         **kwargs
     )
+
+
+def wait_for_change(widget, value):
+    future = asyncio.Future()
+
+    def get_value(change):
+        future.set_result(change.new)
+        widget.unobserve(get_value, value)
+
+    widget.observe(get_value, value)
+    return future
 
 
 class LayerException(TraitError):
@@ -284,6 +295,53 @@ class Icon(UILayer):
         return value
 
 
+class DivIcon(UILayer):
+    """DivIcon class.
+
+    Custom lightweight icon for markers that uses a simple <div> element
+    instead of an image used for markers.
+
+    Attributes
+    ----------
+    html : string
+        Custom HTML code to put inside the div element,
+        empty by default.
+    bg_pos : tuple, default [0, 0]
+        Optional relative position of the background, in pixels.
+    icon_size: tuple, default None
+        The size of the icon, in pixels.
+    icon_anchor: tuple, default None
+        The coordinates of the "tip" of the icon (relative to its top left corner).
+        The icon will be aligned so that this point is at the marker's geographical
+        location. Centered by default if icon_size is specified.
+    popup_anchor: tuple, default None
+        The coordinates of the point from which popups will "open", relative to the
+        icon anchor.
+    """
+
+    _view_name = Unicode('LeafletDivIconView').tag(sync=True)
+    _model_name = Unicode('LeafletDivIconModel').tag(sync=True)
+
+    html = Unicode('').tag(sync=True, o=True)
+    bg_pos = List([0, 0], allow_none=True).tag(sync=True, o=True)
+    icon_size = List(default_value=None, allow_none=True).tag(sync=True, o=True)
+    icon_anchor = List(default_value=None, allow_none=True).tag(sync=True, o=True)
+    popup_anchor = List([0, 0], allow_none=True).tag(sync=True, o=True)
+
+    @validate('icon_size', 'icon_anchor', 'popup_anchor')
+    def _validate_attr(self, proposal):
+        value = proposal['value']
+
+        # Workaround Traitlets which does not respect the None default value
+        if value is None or len(value) == 0:
+            return None
+
+        if len(value) != 2:
+            raise TraitError('The value should be of size 2, but {} was given'.format(value))
+
+        return value
+
+
 class AwesomeIcon(UILayer):
     """AwesomeIcon class.
 
@@ -352,8 +410,7 @@ class Marker(UILayer):
     location = List(def_loc).tag(sync=True)
     opacity = Float(1.0, min=0.0, max=1.0).tag(sync=True)
     visible = Bool(True).tag(sync=True)
-    icon = Union((Instance(Icon), Instance(AwesomeIcon)), allow_none=True, default_value=None).tag(sync=True,
-                                                                                                   **widget_serialization)
+    icon = Union((Instance(Icon), Instance(AwesomeIcon), Instance(DivIcon)), allow_none=True, default_value=None).tag(sync=True, **widget_serialization)
 
     # Options
     z_index_offset = Int(0).tag(sync=True, o=True)
@@ -441,7 +498,6 @@ class Popup(UILayer):
     close_button = Bool(True).tag(sync=True, o=True)
     auto_close = Bool(True).tag(sync=True, o=True)
     close_on_escape_key = Bool(True).tag(sync=True, o=True)
-    class_name = Unicode('').tag(sync=True, o=True)
 
 
 class RasterLayer(Layer):
@@ -584,6 +640,55 @@ class WMSLayer(TileLayer):
     transparent = Bool(False).tag(sync=True, o=True)
     crs = Dict(default_value=projections.EPSG3857).tag(sync=True)
     uppercase = Bool(False).tag(sync=True, o=True)
+
+
+class MagnifyingGlass(RasterLayer):
+    """MagnifyingGlass class.
+
+    Attributes
+    ----------
+    radius: int, default 100
+        The radius of the magnifying glass, in pixels.
+    zoom_offset: int, default 3
+        The zoom level offset between the main map zoom and the magnifying glass.
+    fixed_zoom: int, default -1
+        If different than -1, defines a fixed zoom level to always use in the magnifying glass,
+        ignoring the main map zoom and the zoomOffet value.
+    fixed_position: boolean, default False
+        If True, the magnifying glass will stay at the same position on the map,
+        not following the mouse cursor.
+    lat_lng: list, default [0, 0]
+        The initial position of the magnifying glass, both on the main map and as the center
+        of the magnified view. If fixed_position is True, it will always keep this position.
+    layers: list, default []
+        Set of layers to display in the magnified view.
+        These layers shouldn't be already added to a map instance.
+    """
+
+    _view_name = Unicode('LeafletMagnifyingGlassView').tag(sync=True)
+    _model_name = Unicode('LeafletMagnifyingGlassModel').tag(sync=True)
+
+    # Options
+    radius = Int(100).tag(sync=True, o=True)
+    zoom_offset = Int(3).tag(sync=True, o=True)
+    fixed_zoom = Int(-1).tag(sync=True, o=True)
+    fixed_position = Bool(False).tag(sync=True, o=True)
+    lat_lng = List(def_loc).tag(sync=True, o=True)
+    layers = Tuple().tag(trait=Instance(Layer), sync=True, o=True, **widget_serialization)
+
+    _layer_ids = List()
+
+    @validate('layers')
+    def _validate_layers(self, proposal):
+        '''Validate layers list.
+
+        Makes sure only one instance of any given layer can exist in the
+        layers list.
+        '''
+        self._layer_ids = [layer.model_id for layer in proposal.value]
+        if len(set(self._layer_ids)) != len(self._layer_ids):
+            raise LayerException('duplicate layer detected, only use each layer once')
+        return proposal.value
 
 
 class ImageOverlay(RasterLayer):
@@ -748,7 +853,6 @@ class Path(VectorLayer):
     line_cap = Enum(values=['round', 'butt', 'square'], default_value='round').tag(sync=True, o=True)
     line_join = Enum(values=['arcs', 'bevel', 'miter', 'miter-clip', 'round'], default_value='round').tag(sync=True, o=True)
     pointer_events = Unicode('').tag(sync=True, o=True)
-    class_name = Unicode('').tag(sync=True, o=True)
     opacity = Float(1.0, min=0.0, max=1.0).tag(sync=True, o=True)
 
 
@@ -1351,6 +1455,8 @@ class WidgetControl(Control):
     max_height = Int(default_value=None, allow_none=True).tag(sync=True)
     min_height = Int(default_value=None, allow_none=True).tag(sync=True)
 
+    transparent_bg = Bool(False).tag(sync=True, o=True)
+
 
 class FullScreenControl(Control):
     """FullScreenControl class.
@@ -1773,6 +1879,28 @@ class SearchControl(Control):
     marker = Instance(Marker, allow_none=True, default_value=None).tag(sync=True, **widget_serialization)
     layer = Instance(LayerGroup, allow_none=True, default_value=None).tag(sync=True, **widget_serialization)
 
+    _feature_found_callbacks = Instance(CallbackDispatcher, ())
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.on_msg(self._handle_leaflet_event)
+
+    def _handle_leaflet_event(self, _, content, buffers):
+        if content.get('event', '') == 'found':
+            self._feature_found_callbacks(**content)
+
+    def on_feature_found(self, callback, remove=False):
+        """Add a found feature event listener for searching in GeoJSON layer.
+
+        Parameters
+        ----------
+        callback : callable
+            Callback function that will be called on found event when searching in GeoJSON layer.
+        remove: boolean
+            Whether to remove this callback or not. Defaults to False.
+        """
+        self._feature_found_callbacks.register_callback(callback, remove=remove)
+
 
 class MapStyle(Style, Widget):
     """Map Style Widget
@@ -2109,3 +2237,44 @@ class Map(DOMWidget, InteractMixin):
 
     def on_interaction(self, callback, remove=False):
         self._interaction_callbacks.register_callback(callback, remove=remove)
+
+    def fit_bounds(self, bounds):
+        """Sets a map view that contains the given geographical bounds
+        with the maximum zoom level possible.
+
+        Parameters
+        ----------
+        bounds: list of lists
+            The lat/lon bounds in the form [[south, east], [north, west]].
+        """
+        asyncio.ensure_future(self._fit_bounds(bounds))
+
+    async def _fit_bounds(self, bounds):
+        (b_south, b_west), (b_north, b_east) = bounds
+        center = b_south + (b_north - b_south) / 2, b_west + (b_east - b_west) / 2
+        if center != self.center:
+            self.center = center
+            await wait_for_change(self, 'bounds')
+        zoomed_out = False
+        # zoom out
+        while True:
+            if self.zoom <= 1:
+                break
+            (south, west), (north, east) = self.bounds
+            if south > b_south or north < b_north or west > b_west or east < b_east:
+                self.zoom -= 1
+                await wait_for_change(self, 'bounds')
+                zoomed_out = True
+            else:
+                break
+        if not zoomed_out:
+            # zoom in
+            while True:
+                (south, west), (north, east) = self.bounds
+                if south < b_south and north > b_north and west < b_west and east > b_east:
+                    self.zoom += 1
+                    await wait_for_change(self, 'bounds')
+                else:
+                    self.zoom -= 1
+                    await wait_for_change(self, 'bounds')
+                    break
