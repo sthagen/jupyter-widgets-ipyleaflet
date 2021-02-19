@@ -4,9 +4,12 @@ dist/
 build/
 *.py[cod]
 node_modules/
+*package-lock.json
 
 # Compiled javascript
-ipyleaflet/static/
+ipyleaflet/nbextension/
+ipyleaflet/labextension/
+js/dist/
 
 # OS X
 .DS_Store

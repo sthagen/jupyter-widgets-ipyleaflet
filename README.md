@@ -1,7 +1,7 @@
 # ipyleaflet
 
 [![Documentation](http://readthedocs.org/projects/ipyleaflet/badge/?version=latest)](https://ipyleaflet.readthedocs.io/en/latest/?badge=latest)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jupyter-widgets/ipyleaflet/stable?filepath=examples)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jupyter-widgets/ipyleaflet/stable?urlpath=lab%2Ftree%2Fexamples)
 [![Join the Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jupyter-widgets/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Downloads](https://pepy.tech/badge/ipyleaflet/month)](https://pepy.tech/project/ipyleaflet/month)
 
@@ -57,7 +57,7 @@ If you are using the classic Jupyter Notebook < 5.3 you need to run this extra c
 jupyter nbextension enable --py --sys-prefix ipyleaflet
 ```
 
-If you are using JupyterLab, you will need to install the JupyterLab extension:
+If you are using JupyterLab <=2, you will need to install the JupyterLab extension:
 
 ```
 jupyter labextension install @jupyter-widgets/jupyterlab-manager jupyter-leaflet
@@ -65,7 +65,7 @@ jupyter labextension install @jupyter-widgets/jupyterlab-manager jupyter-leaflet
 
 ## Installation from sources
 
-For a development installation (requires npm, you can install it with `conda install -c conda-forge nodejs`):
+For a development installation (requires yarn, you can install it with `conda install -c conda-forge yarn`):
 
 ```
 git clone https://github.com/jupyter-widgets/ipyleaflet.git
@@ -80,30 +80,16 @@ jupyter nbextension install --py --symlink --sys-prefix ipyleaflet
 jupyter nbextension enable --py --sys-prefix ipyleaflet
 ```
 
-If you are using JupyterLab, you need to install the labextension for ipywidgets and ipyleaflet:
-
-```
-jupyter labextension install @jupyter-widgets/jupyterlab-manager js
-```
-
 Note for developers:
 
 - the ``-e`` pip option allows one to modify the Python code in-place. Restart the kernel in order to see the changes.
 - the ``--symlink`` argument on Linux or OS X allows one to modify the JavaScript code in-place. This feature is not available with Windows.
 
-    For automatically building the JavaScript code every time there is a change, run the following command from the ``ipyleaflet/js/`` directory:
+For developing with JupyterLab:
 
-    ```
-    npm run watch
-    ```
-
-    If you are on JupyterLab you also need to run the following in a separate terminal:
-
-    ```
-    jupyter lab --watch
-    ```
-
-    Every time a JavaScript build has terminated you need to refresh the Notebook page in order to load the JavaScript code again.
+```
+jupyter labextension develop ipyleaflet
+```
 
 ## Documentation
 
