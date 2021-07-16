@@ -19,9 +19,6 @@ from traitlets import (
     link, observe, default, validate, TraitError, Union, Any
 )
 
-from branca.colormap import linear, ColorMap
-from shapely import geometry, wkt
-
 from ._version import EXTENSION_VERSION
 
 from .projections import projections
@@ -1022,6 +1019,9 @@ class MarkerCluster(Layer):
     _model_name = Unicode('LeafletMarkerClusterModel').tag(sync=True)
 
     markers = Tuple().tag(trait=Instance(Marker), sync=True, **widget_serialization)
+    # Options
+    disable_clustering_at_zoom = Int(18).tag(sync=True, o=True)
+    max_cluster_radius = Int(80).tag(sync=True, o=True)
 
 
 class LayerGroup(Layer):
@@ -1305,7 +1305,7 @@ class Choropleth(GeoJSON):
     choro_data = Dict()
     value_min = CFloat(None, allow_none=True)
     value_max = CFloat(None, allow_none=True)
-    colormap = Instance(ColorMap)
+    colormap = Any()
     key_on = Unicode('id')
 
     @observe('style', 'style_callback', 'value_min', 'value_max', 'geo_data', 'choro_data', 'colormap')
@@ -1314,6 +1314,10 @@ class Choropleth(GeoJSON):
 
     @default('colormap')
     def _default_colormap(self):
+        try:
+            from branca.colormap import linear
+        except ImportError:
+            raise RuntimeError("The Choropleth needs branca to be installed, please run `pip install branca`")
         return linear.OrRd_06
 
     @default('style_callback')
@@ -1375,6 +1379,11 @@ class WKTLayer(GeoJSON):
         self.data = self._get_data()
 
     def _get_data(self):
+        try:
+            from shapely import geometry, wkt
+        except ImportError:
+            raise RuntimeError("The WKTLayer needs shapely to be installed, please run `pip install shapely`")
+
         if self.path:
             with open(self.path) as f:
                 parsed_wkt = wkt.load(f)
@@ -1660,6 +1669,9 @@ class DrawControl(Control):
     # Edit tools
     edit = Bool(True).tag(sync=True)
     remove = Bool(True).tag(sync=True)
+
+    # Layer data
+    data = List().tag(sync=True)
 
     last_draw = Dict({
         'type': 'Feature',
@@ -1968,6 +1980,7 @@ class Map(DOMWidget, InteractMixin):
     zoom_snap = CFloat(1).tag(sync=True, o=True)
     interpolation = Unicode('bilinear').tag(sync=True, o=True)
     crs = Dict(default_value=projections.EPSG3857).tag(sync=True)
+    prefer_canvas = Bool(False).tag(sync=True, o=True)
 
     # Specification of the basemap
     basemap = Union(
@@ -2245,7 +2258,7 @@ class Map(DOMWidget, InteractMixin):
         Parameters
         ----------
         bounds: list of lists
-            The lat/lon bounds in the form [[south, east], [north, west]].
+            The lat/lon bounds in the form [[south, west], [north, east]].
         """
         asyncio.ensure_future(self._fit_bounds(bounds))
 

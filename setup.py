@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-from distutils import log
 from setuptools import setup, find_packages
 
 from jupyter_packaging import (
@@ -18,10 +17,6 @@ name = 'ipyleaflet'
 long_description = 'A Jupyter widget for dynamic Leaflet maps'
 
 here = os.path.dirname(os.path.abspath(__file__))
-
-log.set_verbosity(log.DEBUG)
-log.info('setup.py entered')
-log.info('$PATH=%s' % os.environ['PATH'])
 
 # Get ipyleaflet version
 version = get_version(os.path.join(name, '_version.py'))
@@ -60,9 +55,7 @@ setup_args = dict(
     include_package_data=True,
     install_requires=[
         'ipywidgets>=7.6.0,<8',
-        'traittypes>=0.2.1,<3',
-        'branca>=0.3.1,<0.5',
-        'shapely',
+        'traittypes>=0.2.1,<3'
     ],
     packages=find_packages(),
     zip_safe=False,
