@@ -15,6 +15,7 @@ export class LeafletTileLayerModel extends rasterlayer.LeafletRasterLayerModel {
       url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       min_zoom: 0,
       max_zoom: 18,
+      bounds: null,
       tile_size: 256,
       attribution:
         'Map data (c) <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
@@ -52,6 +53,11 @@ export class LeafletTileLayerView extends rasterlayer.LeafletRasterLayerView {
         this.spinner.stop();
       }
     });
+    this.obj.on("remove", event => {
+      if (this.model.get('show_loading')) {
+        this.spinner.stop();
+      }
+    })
   }
 
   model_events() {

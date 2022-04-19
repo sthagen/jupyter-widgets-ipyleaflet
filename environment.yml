@@ -1,10 +1,9 @@
+
 name: ipyleaflet
 channels:
   - conda-forge
 dependencies:
-  - nodejs=14.11
-  - ipyleaflet=0.14.0
-  - jupyterlab=3
+  - ipyleaflet=0.16.0
   - scipy
   - bqplot
   - rasterio
@@ -17,3 +16,4 @@ dependencies:
   - geopandas
   - netcdf4
   - xarray
+  - ipyflex

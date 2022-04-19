@@ -34,8 +34,8 @@ jobs:
     - name: Mamba install dependencies
       run: mamba install python=${{ matrix.python-version }} pip nodejs flake8
 
-    - name: Mamba install JupyterLab 3
-      run: mamba install jupyterlab=3 ipywidgets=7.6
+    - name: Mamba install dependencies
+      run: mamba install jupyterlab ipywidgets openssl=1.1.1l jupyter-packaging~=0.7.9
 
     - name: Install ipyleaflet
       run: pip install .
@@ -53,11 +53,3 @@ jobs:
 
     - name: Import check
       run: python -c 'import ipyleaflet'
-
-    - name: Build docs (Only on Linux for saving time)
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        mamba install sphinx sphinx_rtd_theme
-        pip install -r docs/requirements.txt
-        cd docs
-        make html

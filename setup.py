@@ -37,7 +37,7 @@ data_files_spec = [
 
 cmdclass = create_cmdclass('jsdeps', data_files_spec=data_files_spec)
 js_command = combine_commands(
-    install_npm(js_dir, npm=["yarn"], build_cmd='build:extensions'), ensure_targets(jstargets),
+    install_npm(js_dir, npm=["yarn"], build_cmd='build'), ensure_targets(jstargets),
 )
 
 is_repo = os.path.exists(os.path.join(here, '.git'))
@@ -55,7 +55,8 @@ setup_args = dict(
     include_package_data=True,
     install_requires=[
         'ipywidgets>=7.6.0,<8',
-        'traittypes>=0.2.1,<3'
+        'traittypes>=0.2.1,<3',
+        'xyzservices>=2021.8.1'
     ],
     packages=find_packages(),
     zip_safe=False,
@@ -70,12 +71,12 @@ setup_args = dict(
         'Intended Audience :: Science/Research',
         'Topic :: Multimedia :: Graphics',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10'
     ],
 )
 

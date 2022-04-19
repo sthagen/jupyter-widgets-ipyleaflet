@@ -13,6 +13,7 @@ js/dist/
 
 # OS X
 .DS_Store
+.idea/
 
 js/jupyter-leaflet-*.tgz
 
@@ -20,6 +21,11 @@ js/jupyter-leaflet-*.tgz
 docs/*.csv
 docs/*.json
 docs/*.nc
+docs/test.wkt
 
 # Untitled Notebooks
 *Untitled*.ipynb
+
+#Galata
+ui-test/playwright-report
+ui-test/test-results

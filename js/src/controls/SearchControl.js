@@ -8,6 +8,7 @@ const control = require('./Control.js');
 export class LeafletSearchControlModel extends control.LeafletControlModel {
   defaults(){
     return{
+      ...super.defaults(),
       _view_name: 'LeafletSearchControlView',
       _model_name: 'LeafletSearchControlModel',
       url: null,
@@ -50,17 +51,21 @@ export class LeafletSearchControlView extends control.LeafletControlView {
   }
 
   leaflet_events() {
-    if (this.model.get('layer') !== null) {
+    this.obj.on('search:locationfound', (e) => {
+      if (e.layer !== null) {
         var found_style = this.model.get('found_style');
-        this.obj.on('search:locationfound', (e) => {
-           e.layer.setStyle(found_style);
-           if(e.layer._popup)
-              e.layer.openPopup();
-           this.send({
-             event: 'found',
-             feature: e.layer.feature
-           });
-        });
-    }
+        e.layer.setStyle(found_style);
+        if (e.layer._popup) {
+          e.layer.openPopup();
+        }
+      }
+
+      this.send({
+        event: 'locationfound',
+        text: e.text,
+        feature: e.layer !== null ? e.layer.feature : null,
+        location: [e.latlng.lat, e.latlng.lng]
+      });
+    });
   }
 }
