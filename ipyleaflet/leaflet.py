@@ -7,6 +7,7 @@ import asyncio
 import json
 import xyzservices
 from datetime import date, timedelta
+from math import isnan
 
 from ipywidgets import (
     Widget, DOMWidget, Box, Color, CallbackDispatcher, widget_serialization,
@@ -59,7 +60,7 @@ def basemap_to_tiles(basemap, day=yesterday, **kwargs):
 
     return TileLayer(
         url=url,
-        max_zoom=basemap.get('max_zoom', 19),
+        max_zoom=basemap.get('max_zoom', 18),
         min_zoom=basemap.get('min_zoom', 1),
         attribution=basemap.get('html_attribution', '') or basemap.get('attribution', ''),
         name=basemap.get('name', ''),
@@ -549,16 +550,18 @@ class TileLayer(RasterLayer):
     url: string, default "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         Url to the tiles service.
     min_zoom: int, default 0
-        Minimum zoom for this tile service.
+        The minimum zoom level down to which this layer will be displayed (inclusive).
     max_zoom: int, default 18
-        Maximum zoom for this tile service.
-    min_native_zoom: int, default 0
-    max_native_zoom: int, default 18
+        The maximum zoom level up to which this layer will be displayed (inclusive).
+    min_native_zoom: int, default None
+        Minimum zoom number the tile source has available. If it is specified, the tiles on all zoom levels lower than min_native_zoom will be loaded from min_native_zoom level and auto-scaled.
+    max_native_zoom: int, default None
+        Maximum zoom number the tile source has available. If it is specified, the tiles on all zoom levels higher than max_native_zoom will be loaded from max_native_zoom level and auto-scaled.
     bounds: list or None, default None
         List of SW and NE location tuples. e.g. [(50, 75), (75, 120)].
     tile_size: int, default 256
         Tile sizes for this tile service.
-    attribution: string, default "Map data (c) <a href="https://openstreetmap.org">OpenStreetMap</a> contributors"
+    attribution: string, default None.
         Tiles service attribution.
     no_wrap: boolean, default False
         Whether the layer is wrapped around the antimeridian.
@@ -580,12 +583,11 @@ class TileLayer(RasterLayer):
     url = Unicode('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').tag(sync=True)
     min_zoom = Int(0).tag(sync=True, o=True)
     max_zoom = Int(18).tag(sync=True, o=True)
-    min_native_zoom = Int(0).tag(sync=True, o=True)
-    max_native_zoom = Int(18).tag(sync=True, o=True)
+    min_native_zoom = Int(default_value=None, allow_none=True).tag(sync=True, o=True)
+    max_native_zoom = Int(default_value=None, allow_none=True).tag(sync=True, o=True)
     bounds = List(default_value=None, allow_none=True, help='list of SW and NE location tuples').tag(sync=True, o=True)
     tile_size = Int(256).tag(sync=True, o=True)
-    attribution = Unicode('Map data (c) <a href="https://openstreetmap.org">OpenStreetMap</a> contributors').tag(
-        sync=True, o=True)
+    attribution = Unicode(default_value=None, allow_none=True).tag(sync=True, o=True)
     detect_retina = Bool(False).tag(sync=True, o=True)
     no_wrap = Bool(False).tag(sync=True, o=True)
     tms = Bool(False).tag(sync=True, o=True)
@@ -1330,6 +1332,12 @@ class Choropleth(GeoJSON):
         The colormap used for the effect.
     key_on: string, default "id"
         The feature key to use for the colormap effect.
+    nan_color: string, default "black"
+        The color used for filling polygons with NaN-values data.
+    nan_opacity : float, default 0.4
+        The opacity used for NaN data polygons, between 0. (fully transparent) and 1. (fully opaque).
+    default_opacity: float, default 1.0
+        The opacity used for well-defined data (non-NaN values), between 0. (fully transparent) and 1. (fully opaque).
     """
 
     geo_data = Dict()
@@ -1338,8 +1346,11 @@ class Choropleth(GeoJSON):
     value_max = CFloat(None, allow_none=True)
     colormap = Any()
     key_on = Unicode('id')
+    nan_color = Unicode('black')
+    nan_opacity = CFloat(0.4)
+    default_opacity = CFloat(1.0)
 
-    @observe('style', 'style_callback', 'value_min', 'value_max', 'geo_data', 'choro_data', 'colormap')
+    @observe('style', 'style_callback', 'value_min', 'value_max', 'nan_color', 'nan_opacity', 'default_opacity', 'geo_data', 'choro_data', 'colormap')
     def _update_data(self, change):
         self.data = self._get_data()
 
@@ -1355,7 +1366,8 @@ class Choropleth(GeoJSON):
     def _default_style_callback(self):
         def compute_style(feature, colormap, choro_data):
             return dict(
-                fillColor=colormap(choro_data),
+                fillColor=self.nan_color if isnan(choro_data) else colormap(choro_data),
+                fillOpacity=self.nan_opacity if isnan(choro_data) else self.default_opacity,
                 color='black',
                 weight=0.9
             )
@@ -1366,12 +1378,15 @@ class Choropleth(GeoJSON):
         if not self.geo_data:
             return {}
 
+        choro_data_values_list = [x for x in self.choro_data.values() if not isnan(x)]
+
         if self.value_min is None:
-            self.value_min = min(self.choro_data.items(), key=lambda x: x[1])[1]
+            self.value_min = min(choro_data_values_list)
         if self.value_max is None:
-            self.value_max = max(self.choro_data.items(), key=lambda x: x[1])[1]
+            self.value_max = max(choro_data_values_list)
 
         colormap = self.colormap.scale(self.value_min, self.value_max)
+
         data = copy.deepcopy(self.geo_data)
 
         for feature in data['features']:
@@ -2011,9 +2026,9 @@ class Map(DOMWidget, InteractMixin):
         The current center of the map.
     zoom: float, default 12
         The current zoom value of the map.
-    max_zoom: int, default 18
+    max_zoom: float, default None
         Maximal zoom value.
-    min_zoom: int, default 1
+    min_zoom: float, default None
         Minimal zoom value.
     zoom_snap: float, default 1
         Forces the map’s zoom level to always be a multiple of this.
@@ -2071,10 +2086,9 @@ class Map(DOMWidget, InteractMixin):
 
     # Map options
     center = List(def_loc).tag(sync=True, o=True)
-    zoom_start = CFloat(12).tag(sync=True, o=True)
-    zoom = CFloat(12).tag(sync=True, o=True)
-    max_zoom = CFloat(18).tag(sync=True, o=True)
-    min_zoom = CFloat(1).tag(sync=True, o=True)
+    zoom = CFloat(default_value=None, allow_none=True).tag(sync=True, o=True)
+    max_zoom = CFloat(default_value=None, allow_none=True).tag(sync=True, o=True)
+    min_zoom = CFloat(default_value=None, allow_none=True).tag(sync=True, o=True)
     zoom_delta = CFloat(1).tag(sync=True, o=True)
     zoom_snap = CFloat(1).tag(sync=True, o=True)
     interpolation = Unicode('bilinear').tag(sync=True, o=True)
