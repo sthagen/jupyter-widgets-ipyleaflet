@@ -1,15 +1,27 @@
-ipyleaflet: Interactive maps in the Jupyter notebook
-====================================================
+Introduction to ipyleaflet
+==========================
+Ipyleaflet is a `Jupyter widget <https://ipywidgets.readthedocs.io>`_ for
+`Leaflet.js <https://leafletjs.com/>`_ , enabling interactive maps in the
+Jupyter notebook. Every object in ipyleaflet (including the Map, TileLayers, Layers,
+Controls, etc.) is interactive: you can dynamically update attributes from
+Python or from the browser.
 
+.. image:: _static/gallery.gif
+   :width: 1200
 
 Try it online
 -------------
 
-You can give ipyleaflet a try in this documentation by clicking on `Try it on RetroLab <https://ipyleaflet.readthedocs.io/en/latest/lite/retro>`__ or
-`Try it on JupyterLab <https://ipyleaflet.readthedocs.io/en/latest/lite/lab>`__.
+.. image:: https://jupyterlite.rtfd.io/en/latest/_static/badge.svg
+   :target: ./lite/lab?path=ipyleaflet.ipynb
 
-Index
------
+You can try ipyleaflet below, or open many other live examples in a new browser tab with
+`JupyterLite <./lite/lab?path=ipyleaflet.ipynb>`_ or `RetroLite <./lite/retro/tree>`_.
+
+.. retrolite:: ipyleaflet.ipynb
+
+Table of Contents
+-----------------
 
 .. toctree::
     :maxdepth: 2
