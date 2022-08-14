@@ -1165,7 +1165,9 @@ class LayerGroup(Layer):
         Parameters
         ----------
         layer: layer instance
-            The new layer to include in the group.
+            The new layer to include in the group. This can also be an object
+            with an ``as_leaflet_layer`` method which generates a compatible
+            layer type.
         """
 
         if isinstance(layer, dict):
@@ -2521,6 +2523,9 @@ class Map(DOMWidget, InteractMixin):
         item: Layer or Control instance
             The layer or control to add.
         """
+        if hasattr(item, 'as_leaflet_layer'):
+            item = item.as_leaflet_layer()
+
         if isinstance(item, Layer):
             if isinstance(item, dict):
                 item = basemap_to_tiles(item)
