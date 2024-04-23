@@ -1,6 +1,6 @@
 {
   "name": "jupyter-leaflet",
-  "version": "0.18.1",
+  "version": "0.19.0",
   "description": "jupyter - leaflet bridge",
   "keywords": [
     "jupyter",
@@ -39,6 +39,7 @@
     "watch:nbextension": "webpack --watch"
   },
   "dependencies": {
+    "@geoman-io/leaflet-geoman-free": "^2.16.0",
     "@jupyter-widgets/base": "^2 || ^3 || ^4 || ^5 || ^6",
     "buffer": "^6.0.3",
     "crypto-browserify": "^3.12.0",
