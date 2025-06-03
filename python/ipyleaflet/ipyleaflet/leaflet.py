@@ -102,7 +102,7 @@ def basemap_to_tiles(basemap, day=yesterday, **kwargs):
         Extra key-word arguments to pass to the TileLayer constructor.
     """
     if isinstance(basemap, xyzservices.lib.TileProvider):
-        url = basemap.build_url(time=day)
+        url = basemap.build_url(time=day, scale_factor="{r}")
     elif isinstance(basemap, dict):
         url = basemap.get("url", "")
     else:
@@ -2801,7 +2801,7 @@ class Map(DOMWidget, InteractMixin):
 
     # Map options
     center = List(def_loc).tag(sync=True, o=True)
-    zoom = CFloat(12).tag(sync=True, o=True)
+    zoom = CFloat(4).tag(sync=True, o=True)
     max_zoom = CFloat(default_value=None, allow_none=True).tag(sync=True, o=True)
     min_zoom = CFloat(default_value=None, allow_none=True).tag(sync=True, o=True)
     zoom_delta = CFloat(1).tag(sync=True, o=True)
